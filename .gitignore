@@ -1,0 +1,17 @@
+# Proprietary Alaska/Boeing source manuals — never commit these
+Resources/
+
+# OS / local
+.DS_Store
+.claude/settings.local.json
+
+# the shared password — never commit
+password.txt
+
+# READABLE proprietary content — never put in a public repo.
+# (Only the ENCRYPTED docs/js/data.locked.js is published.)
+app/js/data.js
+737-CQ-Study.html
+
+# test/serve scratch
+/tmp/
