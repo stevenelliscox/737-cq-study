@@ -125,8 +125,12 @@ def main():
     with open(os.path.join(DOCS, "index.html"), "w") as f:
         f.write(index)
 
-    # service worker (locked asset list, network-first)
-    sw = '''const CACHE = "ak737cq-locked-v1";
+    # service worker (locked asset list, network-first).
+    # Cache name is versioned per-build (salt is random each build, so `check`
+    # differs every time) → activating the new SW purges the old cache, so a
+    # rebuild+deploy always serves fresh files instead of a stale copy.
+    version = bundle["check"][:8]
+    sw = '''const CACHE = "ak737cq-locked-VERSION";
 const ASSETS = ["./","./index.html","./css/styles.css","./js/vendor/crypto-js.min.js",
 "./js/data.locked.js","./js/srs.js","./js/app.js","./js/lock.js","./manifest.webmanifest",
 "./icons/icon-180.png","./icons/icon-192.png","./icons/icon-512.png"];
@@ -141,7 +145,7 @@ self.addEventListener("fetch", e => {
 });
 '''
     with open(os.path.join(DOCS, "sw.js"), "w") as f:
-        f.write(sw)
+        f.write(sw.replace("VERSION", version))
 
     # GitHub Pages: don't run content through Jekyll
     open(os.path.join(DOCS, ".nojekyll"), "w").close()

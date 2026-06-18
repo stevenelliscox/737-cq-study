@@ -32,6 +32,18 @@ function deckById(id) { return BANK.decks.find(d => d.id === id); }
 function allCards() { return BANK.decks.flatMap(d => d.cards.map(c => ({ ...c, _deck: d.id }))); }
 function cardsOfDeck(id) { return deckById(id).cards.map(c => ({ ...c, _deck: id })); }
 
+// "Weak spots": cards you've actually struggled with — lapsed (tapped Again)
+// or marked Hard (which lowers ease below the 2.5 default). Ignores the
+// spaced-repetition schedule so you can grind your worst items on demand.
+function weakCards() {
+  return allCards().filter(c => {
+    const s = SRS.cardState(c.id);
+    if (s.seen === 0) return false;
+    const struggled = s.lapses > 0 || s.ease < 2.5;     // tapped Again or Hard
+    return struggled && SRS.mastery(c.id) < 0.6;          // and not yet relearned
+  });
+}
+
 function shuffle(a) {
   a = a.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -45,6 +57,7 @@ function shuffle(a) {
 function renderHome() {
   State.mode = null;
   const dueTotal = allCards().filter(c => SRS.isDue(c.id)).length;
+  const weakN = weakCards().length;
   const streak = SRS.streak();
 
   const deckCards = BANK.decks.map(d => {
@@ -82,6 +95,7 @@ function renderHome() {
         </button>
         <button class="ghost big" id="btn-exam">🎲 Simulate Oral</button>
       </div>
+      ${weakN ? `<button class="weak-btn" id="btn-weak">⚠️ Drill ${weakN} weak spot${weakN === 1 ? "" : "s"} <span>→</span></button>` : ""}
     </header>
 
     <section class="decks">${deckCards}</section>
@@ -95,6 +109,7 @@ function renderHome() {
     dueTotal ? allCards().filter(c => SRS.isDue(c.id)) : shuffle(allCards()).slice(0, 15),
     "study", "Quick mix");
   $("#btn-exam").onclick = renderExamPicker;
+  if (weakN) $("#btn-weak").onclick = () => startSession(shuffle(weakCards()), "weak", "Weak spots");
   $("#btn-howto").onclick = renderHowto;
   $$(".deck").forEach(b => b.onclick = () => renderDeck(b.dataset.deck));
 }

@@ -68,6 +68,14 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 .hero-actions { display: flex; gap: 10px; }
 .hero-actions .primary { flex: 1.4; } .hero-actions .ghost { flex: 1; }
 .hero-actions span { opacity: .8; }
+.weak-btn {
+  width: 100%; margin-top: 10px; min-height: 50px; font-size: 16px; font-weight: 650;
+  border-radius: 14px; color: #ffb3af;
+  background: rgba(224, 68, 62, .12); border: 1px solid rgba(224, 68, 62, .4);
+  transition: transform .12s var(--ease), background .12s var(--ease);
+}
+.weak-btn:active { transform: scale(.98); background: rgba(224, 68, 62, .18); }
+.weak-btn span { opacity: .8; margin-left: 4px; }
 
 .decks { display: flex; flex-direction: column; gap: 12px; margin: 22px 0 18px; }
 .deck {
