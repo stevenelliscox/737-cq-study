@@ -99,6 +99,7 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 
 .home-foot { text-align: center; margin-top: 8px; }
 .ver { color: #5e7095; font-size: 12px; margin-top: 6px; }
+.ver a { color: var(--accent); text-decoration: none; padding: 4px; }
 
 /* ---------- topbar ---------- */
 .topbar { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; padding: 4px 0 16px; }

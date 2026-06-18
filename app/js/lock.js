@@ -22,7 +22,12 @@
 
   const C = window.CryptoJS;
   const L = window.LOCKED_BANK;
-  const SESSION_KEY = "ak737cq.unlock.v1";
+  // Persist the unlock on THIS device (localStorage survives app close, unlike
+  // sessionStorage). We store the password (not the derived key) so it keeps
+  // working across content updates, which re-salt the bundle each deploy.
+  const REMEMBER_KEY = "ak737cq.pw.v1";
+  // Called from the Home screen's "Lock" link to forget the password.
+  window.lockApp = () => { localStorage.removeItem(REMEMBER_KEY); location.reload(); };
 
   function deriveKey(pw, saltWA) {
     return C.PBKDF2(pw, saltWA, { keySize: 8, iterations: L.iters, hasher: C.algo.SHA256 });
@@ -74,10 +79,10 @@
     catch (e) { onError("Something went wrong unlocking. Try again."); return; }
     if (!jsText) { onError("Incorrect password."); return; }
     try {
-      sessionStorage.setItem(SESSION_KEY, pw);
+      localStorage.setItem(REMEMBER_KEY, pw);
       runBank(jsText);
     } catch (e) {
-      sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(REMEMBER_KEY);
       onError("Couldn't load the content. Try again.");
     }
   }
@@ -96,7 +101,7 @@
           <button class="primary big" id="unlockbtn" type="submit">Unlock</button>
         </form>
         <div class="lock-err" id="lockerr" ${prefillError ? "" : "hidden"}>${prefillError || ""}</div>
-        <div class="lock-foot">Private study aid. Share the password only with trusted colleagues.</div>
+        <div class="lock-foot">Stays unlocked on this device until you tap “Lock” on the home screen. Share the password only with trusted colleagues.</div>
       </div>`;
 
     const err = document.getElementById("lockerr");
@@ -122,12 +127,12 @@
     });
   }
 
-  // Auto-unlock within the same session so you don't retype constantly.
-  const saved = sessionStorage.getItem(SESSION_KEY);
+  // Auto-unlock on this device so you only enter the password once.
+  const saved = localStorage.getItem(REMEMBER_KEY);
   if (saved) {
     const jsText = (() => { try { return tryDecrypt(saved); } catch (e) { return null; } })();
     if (jsText) { try { runBank(jsText); return; } catch (e) { /* fall through */ } }
-    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REMEMBER_KEY);
   }
   renderLogin();
 })();

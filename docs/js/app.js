@@ -102,7 +102,7 @@ function renderHome() {
 
     <footer class="home-foot">
       <button class="link" id="btn-howto">How this app helps you study →</button>
-      <div class="ver">v${BANK.meta.version} · MAX unless NG specified · offline</div>
+      <div class="ver">v${BANK.meta.version} · MAX unless NG specified · offline${typeof window.lockApp === "function" ? ` · <a href="#" id="btn-lock">Lock</a>` : ""}</div>
     </footer>`;
 
   $("#btn-due").onclick = () => startSession(
@@ -111,6 +111,11 @@ function renderHome() {
   $("#btn-exam").onclick = renderExamPicker;
   if (weakN) $("#btn-weak").onclick = () => startSession(shuffle(weakCards()), "weak", "Weak spots");
   $("#btn-howto").onclick = renderHowto;
+  const lockEl = $("#btn-lock");
+  if (lockEl) lockEl.onclick = (e) => {
+    e.preventDefault();
+    if (confirm("Lock the app on this device? You'll need the password to get back in.")) window.lockApp();
+  };
   $$(".deck").forEach(b => b.onclick = () => renderDeck(b.dataset.deck));
 }
 
