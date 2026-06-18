@@ -290,7 +290,7 @@ function renderCard() {
       <div class="count">${State.idx + 1}/${State.queue.length}</div>
     </div>
     <div class="card-stage" id="stage"></div>`;
-  $("#quit").onclick = () => { if (confirm("End this session?")) renderHome(); };
+  $("#quit").onclick = renderHome;
 
   if (c.format === "mc") renderMC(c);
   else renderRecall(c);   // recall + reveal share UI
