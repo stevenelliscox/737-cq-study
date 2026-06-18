@@ -431,9 +431,40 @@ function renderHowto() {
 const app = document.getElementById("app");
 
 function registerSW() {
-  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  }
+  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) return;
+
+  // Only reload when the user actually taps "update" (not on first install).
+  let userTriggeredUpdate = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (userTriggeredUpdate) location.reload();
+  });
+
+  navigator.serviceWorker.register("sw.js").then((reg) => {
+    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg);
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        // A new version finished installing while an old one is in control = update ready.
+        if (nw.state === "installed" && navigator.serviceWorker.controller) showUpdateBanner(reg);
+      });
+    });
+    // Nudge a check whenever the app regains focus (e.g., reopened with signal).
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reg.update().catch(() => {});
+    });
+  }).catch(() => {});
+
+  window.__triggerUpdate = (reg) => { userTriggeredUpdate = true; if (reg.waiting) reg.waiting.postMessage("SKIP_WAITING"); else location.reload(); };
+}
+
+function showUpdateBanner(reg) {
+  if (document.getElementById("update-banner")) return;
+  const b = document.createElement("button");
+  b.id = "update-banner";
+  b.textContent = "🔄 Update available — tap to refresh";
+  b.onclick = () => { b.textContent = "Updating…"; window.__triggerUpdate(reg); };
+  document.body.appendChild(b);
 }
 
 // bootApp() is called immediately when the question bank is already present
