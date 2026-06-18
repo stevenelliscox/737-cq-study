@@ -1,4 +1,4 @@
-const CACHE = "ak737cq-locked-93339f6a";
+const CACHE = "ak737cq-locked-cdca538a";
 const ASSETS = ["./","./index.html","./css/styles.css","./js/vendor/crypto-js.min.js",
 "./js/data.locked.js","./js/srs.js","./js/app.js","./js/lock.js","./manifest.webmanifest",
 "./icons/icon-180.png","./icons/icon-192.png","./icons/icon-512.png"];
