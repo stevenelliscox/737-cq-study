@@ -22,6 +22,7 @@ function md(text) {
   return text
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .split("\n")
     .map(l => l.trim().startsWith("•") || /^\d+\./.test(l.trim())
       ? `<div class="li">${l}</div>` : `<div>${l}</div>`)
@@ -96,6 +97,7 @@ function renderHome() {
         <button class="ghost big" id="btn-exam">🎲 Simulate Oral</button>
       </div>
       ${weakN ? `<button class="weak-btn" id="btn-weak">⚠️ Drill ${weakN} weak spot${weakN === 1 ? "" : "s"} <span>→</span></button>` : ""}
+      <button class="module-btn" id="btn-modules">📘 Event Prep — Day 1 &amp; 2 walkthroughs <span>→</span></button>
     </header>
 
     <section class="decks">${deckCards}</section>
@@ -110,6 +112,7 @@ function renderHome() {
     "study", "Quick mix");
   $("#btn-exam").onclick = renderExamPicker;
   if (weakN) $("#btn-weak").onclick = () => startSession(shuffle(weakCards()), "weak", "Weak spots");
+  $("#btn-modules").onclick = renderModuleList;
   $("#btn-howto").onclick = renderHowto;
   const lockEl = $("#btn-lock");
   if (lockEl) lockEl.onclick = (e) => {
@@ -159,6 +162,60 @@ function renderDeck(id) {
   $("#cram").onclick = () => startSession(shuffle(cardsOfDeck(id)), "cram", d.title + " · Cram");
   $("#reset").onclick = () => {
     if (confirm(`Reset your progress for "${d.title}"?`)) { SRS.resetDeck(d); renderDeck(id); }
+  };
+}
+
+/* ===================== EVENT PREP (teaching modules) ===================== */
+function renderModuleList() {
+  const mods = BANK.modules || [];
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="back" id="back">‹ Home</button>
+      <div class="topbar-title">Event Prep</div><span></span>
+    </div>
+    <p class="module-intro">Day 1 (CLO) &amp; Day 2 (CMV/CQM) walkthroughs — the scenario, what to expect, the gotchas, and what the instructor is looking for. Read it, then take a quick self-check. <em>The gotchas &amp; IP focus are an experienced read of the briefings’ “common errors” prompts + the Flight Handbook — not a verbatim answer key.</em></p>
+    <div class="decks">
+      ${mods.map(m => `
+        <button class="deck module-card" data-mod="${m.id}" style="--accent:#c0392b">
+          <div class="deck-bar"></div>
+          <div class="deck-body">
+            <div class="module-tag">${m.tag}</div>
+            <div class="deck-title">${m.title}</div>
+            <div class="deck-blurb">${m.blurb}</div>
+          </div>
+          <div class="deck-go">›</div>
+        </button>`).join("")}
+    </div>`;
+  $("#back").onclick = renderHome;
+  $$(".module-card").forEach(b => b.onclick = () => renderModule(b.dataset.mod));
+}
+
+function renderModule(id) {
+  const m = (BANK.modules || []).find(x => x.id === id);
+  if (!m) return renderModuleList();
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="back" id="back">‹ Event Prep</button>
+      <div class="topbar-title">Walkthrough</div><span></span>
+    </div>
+    <article class="module-read">
+      <div class="module-tag">${m.tag}</div>
+      <h1 class="module-h1">${m.title}</h1>
+      <div class="module-src">${m.source}</div>
+      ${m.sections.map(s => `
+        <section class="module-sec">
+          <h3>${s.h}</h3>
+          <div class="module-body">${md(s.body)}</div>
+        </section>`).join("")}
+      <button class="primary big" id="check">Check yourself · ${m.quiz.length} questions</button>
+    </article>`;
+  $("#back").onclick = renderModuleList;
+  $("#check").onclick = () => {
+    const cards = m.quiz.map((q, i) => ({
+      id: `mod-${m.id}-q${i}`, format: "mc", system: m.title, source: m.source,
+      prompt: q.prompt, choices: q.choices, answer: q.answer, explain: q.explain
+    }));
+    startSession(cards, "module", m.title + " · Check");
   };
 }
 
